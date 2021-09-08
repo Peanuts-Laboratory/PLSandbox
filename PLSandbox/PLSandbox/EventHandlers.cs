@@ -49,30 +49,54 @@ namespace PLSandbox
 
         public void OnDamage(HurtingEventArgs ev)
         {
-            if (!plugin.DamageShapeShift)
-                return;
+            if (plugin.DamageShapeShift)
+            {
+                Player player = ev.Target;
+                System.Random rand = new System.Random();
+                double range = 1.2 - 0.6;
+
+                List<float> values = new List<float>();
+
+                for (int i = 0; i < 3; i++)
+                {
+                    double samp = rand.NextDouble();
+                    double scaled = (samp * range) + 0.6;
+                    float f = (float)scaled;
+                    values.Add(f);
+                }
+
+                player.Scale = new Vector3(values.ElementAt(0), values.ElementAt(1), values.ElementAt(2));
+                values.Clear();
+            }
 
             if (!Round.IsStarted)
                 return;
 
-            Player player = ev.Target;
-            System.Random rand = new System.Random();
-            double range = 1.2 - 0.6;
-
-            List<float> values = new List<float>();
-
-            for (int i = 0; i < 3; i++)
-            {
-                double samp = rand.NextDouble();
-                double scaled = (samp * range) + 0.6;
-                float f = (float)scaled;
-                values.Add(f);
-            }
-
-            player.Scale = new Vector3(values.ElementAt(0), values.ElementAt(1), values.ElementAt(2));
-            values.Clear();
+            
             
         }
+
+        public void OnPlayerShot(ShotEventArgs ev)
+        {
+            if (plugin.HaloSwat)
+            {
+                Player Target = Player.Get(ev.Target);
+                if (IsHeadshot(ev.HitboxTypeEnum) && Target.Team != Team.SCP)
+                {
+                    ev.Damage = Target.Health;
+                    return;
+                }
+
+                else if (Target.Team != Team.SCP)
+                {
+                    float damageHalf = ev.Damage / 2.5f;
+                    ev.Damage = damageHalf;
+                    return;
+                }
+            }
+        }
+
+        private bool IsHeadshot(HitBoxType HitPosition) => HitPosition == HitBoxType.HEAD;
 
         public void OnChangeClass(ChangingRoleEventArgs ev)
         {
@@ -96,11 +120,36 @@ namespace PLSandbox
         public void RoundEnd(EndingRoundEventArgs ev)
         {
             Timing.KillCoroutines("UpdateEverySecond");
+            Timing.KillCoroutines("EmergencyBroadcast");
             plugin.TimesJumped.Clear();
 
             plugin.JumpDamage = false;
             plugin.DamageShapeShift = false;
 
+        }
+
+        public static int SizeBroadcastCorrection(string message)
+        {
+            if (message.Length > 38)
+                return 40;
+            if (message.Length > 58)
+                return 30;
+
+            return 50;
+        }
+
+        public static IEnumerator<float> EmergencyBroadcast(string Message)
+        {
+            int broadcastSize = SizeBroadcastCorrection(Message);
+            while (Plugin.Instance.EmergencyBroadcastActive)
+            {
+                foreach (Player ply in Player.List)
+                {
+                    ply.Broadcast(3, $"<b><color=#101010>==[</color><color=#EA2D00>EMERGENCY BROADCAST</color><color=#101010>]==</color></b>\n<size={broadcastSize}><color=#E2A81D>{Message}</color></size>", Broadcast.BroadcastFlags.Monospaced, false);
+                    ply.Broadcast(3, $"<b><color=#101010>==[</color><color=#EA2D00>EMERGENCY BROADCAST</color><color=#101010>]==</color></b>\n\n<size={broadcastSize}><color=#E2A81D>{Message}</color></size>", Broadcast.BroadcastFlags.Monospaced, false);
+                }
+                yield return Timing.WaitForSeconds(1f);
+            }
         }
 
         public IEnumerator<float> UpdateEverySecond()
@@ -123,6 +172,7 @@ namespace PLSandbox
 
                             plugin.TimesJumped[player] = currentValue * 1.2f;
                         }
+
                     }
                     yield return Timing.WaitForSeconds(0.5f);
                 }

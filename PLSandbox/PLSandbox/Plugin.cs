@@ -17,6 +17,8 @@ namespace PLSandbox
 
         public bool DamageShapeShift;
         public bool JumpDamage;
+        public bool EmergencyBroadcastActive;
+        public bool HaloSwat;
 
         public Dictionary<Player, float> TimesJumped = new Dictionary<Player, float>();
 
@@ -31,6 +33,7 @@ namespace PLSandbox
             Exiled.Events.Handlers.Server.EndingRound += EventHandlers.RoundEnd;
             Exiled.Events.Handlers.Server.RoundStarted += EventHandlers.RoundStart;
             Exiled.Events.Handlers.Player.Joined += EventHandlers.OnFinalJoin;
+            Exiled.Events.Handlers.Player.Shot += EventHandlers.OnPlayerShot;
 
 
             base.OnEnabled();
@@ -45,6 +48,7 @@ namespace PLSandbox
             Exiled.Events.Handlers.Server.EndingRound -= EventHandlers.RoundEnd;
             Exiled.Events.Handlers.Server.RoundStarted -= EventHandlers.RoundStart;
             Exiled.Events.Handlers.Player.Joined -= EventHandlers.OnFinalJoin;
+            Exiled.Events.Handlers.Player.Shot -= EventHandlers.OnPlayerShot;
 
             base.OnDisabled();
         }

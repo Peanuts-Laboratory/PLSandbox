@@ -36,7 +36,8 @@ namespace PLSandbox.Commands
             {
                 case "list":
                     response = "- DamageShapeShift\n" +
-                               "- JumpDamage\n";
+                               "- JumpDamage\n" +
+                               "- HaloSwat";
                     return false;
                 case "killall":
                     Timing.KillCoroutines("UpdateEverySecond");
@@ -61,6 +62,11 @@ namespace PLSandbox.Commands
                     response = "PLSandbox : Jump Damage has been set to: " + Plugin.Instance.JumpDamage;
                     return false;
 
+                case "haloswat":
+                    Plugin.Instance.HaloSwat = bool.Parse(arguments.At(1));
+                    EventHandlers.SendSettingChange("PLSandbox : Halo Swat has been set to: " + Plugin.Instance.HaloSwat, "magenta");
+                    response = "PLSandbox : Halo Swat has been set to: " + Plugin.Instance.HaloSwat;
+                    return false;
                 default:
                     response = "Unknown Setting";
                     return false;
